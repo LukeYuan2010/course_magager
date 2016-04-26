@@ -8,97 +8,72 @@ ostream &operator<<(ostream &os, const Course &course)
 	return os; 
 }
 
-istream &read(istream &is, Course &course)
-{
-	is >> course.Name >> course.Id;
-	return is;
-}
-
 //CourseManager
 CourseManager::CourseManager(const Course curarray[], unsigned int size)
 {
 	for(int i; i < size; i++)
 	{
-		CourseList.push_back(curarray[i]);
+		m_CourseCap.push_back(curarray[i]);
 	}
 }
 
-CourseManager::CourseManager(vector<Course> &vect)
+CourseManager::CourseManager(CourseCapType &curcap)
 {
-	for (auto c : vect)
+	for (auto c : curcap)
 	{
-		CourseList.push_back(c);
+		m_CourseCap.push_back(c);
 	}
 }
 
 CourseManager::CourseManager(CourseManager &curmg)
 {
-	for (auto c : curmg.CourseList)
+	for (auto c : curmg.m_CourseCap)
 	{
-		CourseList.push_back(c);
+		m_CourseCap.push_back(c);
 	}
 }
 
-bool CourseManager::IsInList(const string &name) const
+bool CourseManager::CourseExisted(const string &name, const string &teacher) const
 {
-	for (auto c : CourseList)
+	for (auto c : m_CourseCap)
 	{
-		if (name == c.GetName())
+		if (c.m_Name == name && c.Teacher == teacher)
 			return true;
 	}
 
 	return false;
 }
 
-bool CourseManager::IsInList(unsigned int id) const
+bool CourseManager::CourseExisted(unsigned id) const;
 {
-	for (auto c : CourseList)
-	{
-		if (id == c.GetId())
-			return true;
-	}
-
-	return false;
-}
-
-bool CourseManager::IsInList(const Course &cur) const
-{
-	for (auto c : CourseList)
-	{
-		if (cur.GetName() == c.GetName() || cur.GetId() == c.GetId())
-			return true;
-	}
-
-	return false;
-}
-
-bool CourseManager::AddCourse(const string &name)
-{
-	if (!IsInList(name))
-	{
-		CourseList.push_back(Course(name));
+	if (m_IdSet.find(id) != m_IdSet.end())
 		return true;
-	}
+	else
+		return false;
+}
 
+bool CourseManager::CourseExisted(const course &coursein) const
+{
+	for (auto c : m_CourseCap)
+	{
+		if (c == coursein)
+			return true;
+	}
 	return false;
 }
 
-bool CourseManager::AddCourse(const Course &cur)
+bool CourseManager::AddCourse(const string &name, const string &teacher)
 {
-	if (!IsInList(cur))
-	{
-		CourseList.push_back(cur);
-		return true;
-	}
-
-	return false;
+	Course newCourse(GetNewId(), name, teacher);
+	m_CourseCap.push_back(newCourse);
+	m_IdSet.insert(newCourse.Id());
 }
-
-bool CourseManager::DeleteLastCourse(void)
+bool CourseManager::AddCourse(const Course &course)
 {
-	if (!CourseList.empty())
+	if (!CourseExisted(course) && !CourseExisted(course.Id()))
 	{
-		CourseList.erase(--(CourseList.end()));
+		m_CourseCap.push_back(course);
+		m_IdSet.insert(course.Id());
 		return true;
 	}
 
@@ -107,38 +82,137 @@ bool CourseManager::DeleteLastCourse(void)
 
 bool CourseManager::DeleteCourse(const string &name)
 {
-	for (auto b = CourseList.begin(); b != CourseList.end(); b++)
+	bool erase_once = false;
+	for (auto begin = m_CourseCap.begin(); begin != m_CourseCap.end(); begin++)
 	{
-		if (b->GetName() == name)
+		if (*begin.Name() == name)
 		{
-			CourseList.erase(b);
-			return true;
+			erase_once = true;
+			m_IdSet.erase(*begin.Id());
+			begin = m_CourseCap.erase(begin);
+
 		}
 	}
 
-	return false;
+	return erase_once;
+}
+bool CourseManager::DeleteCourse(unsigned id)
+{
+	bool erase_once = false;
+	for (auto begin = m_CourseCap.begin(); begin != m_CourseCap.end(); begin++)
+	{
+		if (*begin.Id() == id)
+		{
+			erase_once = true;
+			m_IdSet.erase(*begin.Id());
+			begin = m_CourseCap.erase(begin);
+		}
+	}
+
+	return erase_once;
 }
 
-bool CourseManager::DeleteCourse(unsigned int id)
+bool CourseManager::DeleteTeacher(const string &teacher)
 {
-	for (auto b = CourseList.begin(); b != CourseList.end(); b++)
+	bool erase_once = false;
+	for (auto begin = m_CourseCap.begin(); begin != m_CourseCap.end(); begin++)
 	{
-		if (b->GetId() == id)
+		if (*begin.Name() == name)
 		{
-			CourseList.erase(b);
-			return true;
+			erase_once = true;
+			m_IdSet.erase(*begin.Id());
+			begin = m_CourseCap.erase(begin);
 		}
 	}
 
-	return false;
+	return erase_once;
+}
+
+bool CourseManager::EditCourse(unsigned id, const string &name, const string &teacher)
+{
+	if (!CourseExisted(id))
+		return false;
+
+	for (auto begin = m_CourseCap.begin(); begin != m_CourseCap.end(); begin++) 
+	{
+		if (*begin.Id() == id)
+			break;
+	}
+
+	if (begin == m_CourseCap.end())
+		return false;
+
+	*begin.SetName(name);
+	*begin.SetTeacher(teacher);
+
+	return true;
+}
+
+bool CourseManager::GetFistIdByName(const string &name, bool forward = true, Course CourseOut)const
+{
+	
+}
+
+bool CourseManager::GetFistIdByPartName(const string &part_name, bool forward = true, Course CourseOut)const
+{
+
+}
+
+bool CourseManager::GetFistIdByTeacher(const string &teacher, bool forward = true, Course CourseOut)const
+{
+
+}
+
+bool CourseManager::GetFistIdByTeacher(unsigned id, bool forward = true, Course CourseOut)const
+{
+
+}
+
+unsigned CourseManager::StatisticTeacher(void)
+{
+
+}
+unsigned CourseManager::StatisticForTeacher(const string &teacher)
+{
+
+}
+unsigned CourseManager::StatisticCourse(void)
+{
+
+}
+
+bool CourseManager::SortByName(void)
+{
+
+}
+
+bool CourseManager::SortByTeacher(void)
+{
+
+}
+
+bool CourseManager::SortById(void)
+{
+
+}
+
+bool CourseManager::IsEqual(unsigned firstId, unsigned secondId)
+{
+
+}
+
+
+bool CourseManager::ReplaceTeacher(const string &old_teacher, const string &new_teacher)
+{
+
 }
 
 bool CourseManager::PrintAll(ostream &fs) const
 {
-	if (CourseList.empty())
+	if (m_CourseCap.empty())
 		return false;
 
-	for (auto c : CourseList)
+	for (auto c : m_CourseCap)
 	{
 		fs << c << endl;
 	}
@@ -147,10 +221,10 @@ bool CourseManager::PrintAll(ostream &fs) const
 
 bool CourseManager::PrintCourse(const string &name) const
 {
-	if (CourseList.empty())
+	if (m_CourseCap.empty())
 		return false;
 
-	for (auto c : CourseList)
+	for (auto c : m_CourseCap)
 	{
 		if (c.GetName() == name)
 		{
@@ -164,10 +238,10 @@ bool CourseManager::PrintCourse(const string &name) const
 
 bool CourseManager::PrintCourse(unsigned int id) const
 {
-	if (CourseList.empty())
+	if (m_CourseCap.empty())
 		return false;
 
-	for (auto c : CourseList)
+	for (auto c : m_CourseCap)
 	{
 		if (c.GetId() == id)
 		{
@@ -181,18 +255,18 @@ bool CourseManager::PrintCourse(unsigned int id) const
 
 bool CourseManager::ShowMaxLenCourse(void) const
 {
-	if (CourseList.empty())
+	if (m_CourseCap.empty())
 		return false;
 	
 	unsigned max_length = 0;
-    for (auto c : CourseList)
+    for (auto c : m_CourseCap)
     {
         if (c.GetName().size() > max_length)
            max_length = c.GetName().size();
     }
          
     //cout << "max_length = " << max_length << ", course name is:" << endl;
-    for (auto c : CourseList)
+    for (auto c : m_CourseCap)
     {
         if (c.GetName().size() == max_length)
         {
@@ -200,6 +274,13 @@ bool CourseManager::ShowMaxLenCourse(void) const
         }
     }
 
+}
+
+int CourseManager::GetNewId(void)
+{
+	for (unsigned id = 0; CourseExisted(id); id++) {};
+	//return the first not used id
+	return id;
 }
 
 //CmdManager
