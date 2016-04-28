@@ -1,6 +1,14 @@
 #ifndef COURSE_H
 #define COURSE_H
+
 #include "common.h"
+
+#include <algorithm>
+#include <list>
+#include <set>
+
+using std::set;
+using std::list;
 
 class Course
 {
@@ -9,6 +17,7 @@ class Course
 	
 	public:
 	//a course must have a unique id, name and teacher can be edited later
+	Course() = default;
 	Course(unsigned id):m_Id(id) {}
 	Course(unsigned id, const string &name, const string &teacher):m_Id(id), m_Name(name), m_Teacher(teacher) {}
 	Course(const Course &course) { m_Name = course.m_Name; m_Id = course.m_Id; m_Teacher = course.m_Teacher;}
@@ -46,7 +55,7 @@ class CourseManager
 
 	bool CourseExisted(const string &name, const string &teacher) const;
 	bool CourseExisted(unsigned id) const;
-	bool CourseExisted(const course &coursein) const;
+	bool CourseExisted(const Course &coursein) const;
 
 	bool AddCourse(const string &name, const string &teacher);
 	bool AddCourse(const Course &course);
@@ -57,10 +66,11 @@ class CourseManager
 
 	bool EditCourse(unsigned id, const string &name, const string &teacher);
 
-	bool GetFistIdByName(const string &name, bool forward = true, Course CourseOut)const;
-	bool GetFistIdByPartName(const string &part_name, bool forward = true, Course CourseOut)const;
-	bool GetFistIdByTeacher(const string &teacher, bool forward = true, Course CourseOut)const;
-	bool GetFistIdByTeacher(unsigned id, bool forward = true, Course CourseOut)const;
+
+	bool GetFistCourseByName(const string &name, Course &CourseOut, bool forward = true)const;
+	bool GetFistCourseByPartName(const string &part_name, Course &CourseOut, bool forward = true)const;
+	bool GetFistCourseByTeacher(const string &teacher, Course &CourseOut, bool forward = true)const;
+	bool GetCourseById(unsigned id, Course &CourseOut)const;
 
 	unsigned StatisticTeacher(void);
 	unsigned StatisticForTeacher(const string &teacher);
@@ -79,6 +89,8 @@ class CourseManager
 	bool ShowMaxLenCourse(void) const;
 
 	private:
+	using compare_str_type=bool (*)(const Course &, const string &);
+	bool FindFirstIf(const string &str, compare_str_type f, Course &CourseOut, bool forward = true)const;
 	int GetNewId(void);
 	set<unsigned> m_IdSet;
 	CourseCapType m_CourseCap;
@@ -98,7 +110,7 @@ class CmdManager
 	bool RecordCmd(unsigned int cmd, bool Rslt);
 	
 	const unsigned int m_MinCmd = 0;
-	const unsigned int m_MaxCmd = 8;
+	const unsigned int m_MaxCmd = 11;
 
 	ofstream m_LogHandle;
 	bool m_ExitFlag = false;

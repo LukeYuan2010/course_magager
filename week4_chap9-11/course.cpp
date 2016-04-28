@@ -4,7 +4,7 @@
 
 ostream &operator<<(ostream &os, const Course &course)
 {
-	os << course.Name << " " << course.Id;
+	os << course.Id() << course.Name() << " teached by " << course.Teacher() << endl;
 	return os; 
 }
 
@@ -37,14 +37,14 @@ bool CourseManager::CourseExisted(const string &name, const string &teacher) con
 {
 	for (auto c : m_CourseCap)
 	{
-		if (c.m_Name == name && c.Teacher == teacher)
+		if (c.Name() == name && c.Teacher() == teacher)
 			return true;
 	}
 
 	return false;
 }
 
-bool CourseManager::CourseExisted(unsigned id) const;
+bool CourseManager::CourseExisted(unsigned id) const
 {
 	if (m_IdSet.find(id) != m_IdSet.end())
 		return true;
@@ -52,11 +52,12 @@ bool CourseManager::CourseExisted(unsigned id) const;
 		return false;
 }
 
-bool CourseManager::CourseExisted(const course &coursein) const
+bool CourseManager::CourseExisted(const Course &coursein) const
 {
 	for (auto c : m_CourseCap)
 	{
-		if (c == coursein)
+		if (c.Id() == coursein.Id() && c.Name() == coursein.Name() && 
+				c.Teacher() == coursein.Teacher() )
 			return true;
 	}
 	return false;
@@ -96,6 +97,7 @@ bool CourseManager::DeleteCourse(const string &name)
 
 	return erase_once;
 }
+
 bool CourseManager::DeleteCourse(unsigned id)
 {
 	bool erase_once = false;
@@ -148,63 +150,163 @@ bool CourseManager::EditCourse(unsigned id, const string &name, const string &te
 	return true;
 }
 
-bool CourseManager::GetFistIdByName(const string &name, bool forward = true, Course CourseOut)const
+bool CourseManager::GetFistCourseByName(const string &name, Course &CourseOut, bool forward = true)const
 {
-	
+	auto compare_f = [](const Course &course, const string name)->bool
+					{
+						if (course.Name() == name) 
+							return true; 
+						else 
+							return false;
+					}
+
+	return FindFirstIf(name, compare_f, CourseOut, forward);
 }
 
-bool CourseManager::GetFistIdByPartName(const string &part_name, bool forward = true, Course CourseOut)const
+bool CourseManager::GetFistCourseByPartName(const string &part_name, Course &CourseOut, bool forward = true)const
 {
+	auto compare_f = [](const Course &course, const string part_name)->bool
+					{
+						if (course.Name().find(part_name) != string::npos) 
+							return true; 
+						else 
+							return false;
+					}
 
+	return FindFirstIf(part_name, compare_f, CourseOut, forward);
 }
 
-bool CourseManager::GetFistIdByTeacher(const string &teacher, bool forward = true, Course CourseOut)const
+bool CourseManager::GetFistCourseByTeacher(const string &teacher, Course &CourseOut, bool forward = true)const
 {
-
+	auto compare_f = [](const Course &course, const string teacher)->bool
+					{
+						if (course.Teacher() == teacher) 
+							return true; 
+						else 
+							return false;
+					}
+	return FindFirstIf(name, compare_f, CourseOut, forward);
 }
 
-bool CourseManager::GetFistIdByTeacher(unsigned id, bool forward = true, Course CourseOut)const
+bool CourseManager::FindFirstIf(const string &str, compare_str_type f, Course &CourseOut, bool forward = true)const
 {
+	if (forward)
+	{
+		auto it = m_CourseCap.begin();
+		for ( ; it != m_CourseCap.end(); ++it)
+		{
+			if (f(*it, str)) 
+			{
+				CourseOut == *it;
+				return true;
+			}
+		}
+	}
+	else
+	{
+		auto it = m_CourseCap.rbegin();
+		for ( ; it != m_CourseCap.rend(); ++it)
+		{
+			if (f(*it, str)) 
+			{
+				CourseOut == *it;
+				return true;
+			}
+		}
+	}
 
+	return false;
+}
+
+bool CourseManager::GetCourseById(unsigned id, Course &CourseOut)const
+{
+	auto it = m_CourseCap.begin();
+	for ( ; it != m_CourseCap.end(); ++it)
+	{
+		if (*it.Id() == id) 
+		{
+			CourseOut == *it;
+			return true;
+		}
+	}
+
+	return false;
 }
 
 unsigned CourseManager::StatisticTeacher(void)
 {
+	set<string> TeacherSet;
+	for (auto begin = m_CourseCap.begin() ; begin != m_CourseCap.end(); ++begin)
+	{
+		TeacherSet.insert(*begin.Teacher());
+	}
 
+	return TeacherSet.size();
 }
+
 unsigned CourseManager::StatisticForTeacher(const string &teacher)
 {
+	auto f = [teacher](const Course &course)->bool
+			{
+				if (course.Teacher() == teacher)
+					return true;
+				else
+					return false;
+			}
 
+	return count_if(m_CourseCap.begin(), m_CourseCap.end(), f);
 }
+
 unsigned CourseManager::StatisticCourse(void)
 {
-
+	return m_CourseCap.size();
 }
 
 bool CourseManager::SortByName(void)
 {
+	auto f = [](const Course &first; const Course &second)->bool{return first.Name() < second.Name();}
+	sort_stable(m_CourseCap.begin(), m_CourseCap.end(), f);
 
+	return true;
 }
 
 bool CourseManager::SortByTeacher(void)
 {
+	auto f = [](const Course &first; const Course &second)->bool{return first.Teacher() < second.Teacher();}
+	sort_stable(m_CourseCap.begin(), m_CourseCap.end(), f);
 
+	return true;
 }
 
 bool CourseManager::SortById(void)
 {
+	auto f = [](const Course &first; const Course &second)->bool{return first.Id() < second.Id();}
+	sort_stable(m_CourseCap.begin(), m_CourseCap.end(), f);
 
+	return true;
 }
 
 bool CourseManager::IsEqual(unsigned firstId, unsigned secondId)
 {
+	Course course1, course2;
+	if (GetCourseById(firstId, course1) && GetCourseById(secondId, course2))
+	{
+		return (course1 == course2);
+	}
 
+	return false;
 }
 
 
 bool CourseManager::ReplaceTeacher(const string &old_teacher, const string &new_teacher)
 {
+	for (auto &c : m_CourseCap)
+	{
+		if (c.Teacher() == old_teacher)
+			c.SetTeacher(new_teacher);
+	}
 
+	return true;
 }
 
 bool CourseManager::PrintAll(ostream &fs) const
@@ -212,9 +314,11 @@ bool CourseManager::PrintAll(ostream &fs) const
 	if (m_CourseCap.empty())
 		return false;
 
+	fs << "there " << m_CourseCap.size() > 1 ? " are " : " is " 
+	<< m_CourseCap.size() << "course" << m_CourseCap.size() > 1 ? "s" : "" << endl;
 	for (auto c : m_CourseCap)
 	{
-		fs << c << endl;
+		fs << c;
 	}
 	return true;
 }
@@ -226,14 +330,13 @@ bool CourseManager::PrintCourse(const string &name) const
 
 	for (auto c : m_CourseCap)
 	{
-		if (c.GetName() == name)
+		if (c.Name() == name)
 		{
 			cout << c;
-			return true;
 		}
 	}
 
-	return false;
+	return true;
 }
 
 bool CourseManager::PrintCourse(unsigned int id) const
@@ -243,10 +346,9 @@ bool CourseManager::PrintCourse(unsigned int id) const
 
 	for (auto c : m_CourseCap)
 	{
-		if (c.GetId() == id)
+		if (c.Id() == id)
 		{
 			cout << c;
-			return true;
 		}
 	}
 
@@ -261,16 +363,16 @@ bool CourseManager::ShowMaxLenCourse(void) const
 	unsigned max_length = 0;
     for (auto c : m_CourseCap)
     {
-        if (c.GetName().size() > max_length)
-           max_length = c.GetName().size();
+        if (c.Name().size() > max_length)
+           max_length = c.Name().size();
     }
          
     //cout << "max_length = " << max_length << ", course name is:" << endl;
     for (auto c : m_CourseCap)
     {
-        if (c.GetName().size() == max_length)
+        if (c.Name().size() == max_length)
         {
-           cout <<  c.GetName() << endl;
+           cout <<  c.Name();
         }
     }
 
@@ -311,15 +413,18 @@ bool CmdManager::Run(void)
 ostream &CmdManager::PrintHelpInfo(void)
 {
 	cout << "usage:\12" << 
-     "input 0: show help info(that's me)\12" \
+     "input 0: show help info\12" \
      "input 1: show all course\12" \
-     "input 2: show all the course's num\12" \
-     "input 3: show the max lenth course\12" \
-     "input 4: delet the last course\12" \
-     "input 5: delet a course by name\12" \
-     "input 6: delet a course by id\12" \
-     "input 7: add a course by name\12" \
-     "input 8: exit!" << endl;
+     "input 2: check if course is existed by name and teacher\12" \
+     "input 3: add a new course\12" \
+     "input 4: delete a course by id\12" \
+     "input 5: get a course by part-name\12" \
+     "input 6: Statistic a teacher's Course\12" \
+     "input 7: sort by name\12" \
+     "input 8: sort by id\12" \
+     "input 9: sort by teacher\12" \
+     "input 10: replace a teacher\12" \
+     "input 11: exit!" << endl;
 }
 
 bool CmdManager::Process(unsigned int cmd)
@@ -331,44 +436,77 @@ bool CmdManager::Process(unsigned int cmd)
 				return PrintHelpInfo();
 				break;
 			case 1:
-				return CourseAdmin.PrintAll();
+				return m_CourseAdmin.PrintAll();
 				break;
 			case 2:
-				cout << "course's num is " << CourseAdmin.GetNum();
-				return true;
+				{
+					cout << "input course's name and teacher" << endl;
+					string name, teacher;
+					cin >> name >> teacher;
+					if (m_CourseAdmin.CourseExisted(name, teacher))
+						cout << "find the course" << endl;
+					else
+						cout << "can't find the course" << endl;
+					return true;
+				}
 				break;
 			case 3:
-				return CourseAdmin.ShowMaxLenCourse();
+				{
+					cout << "input course's name and teacher" << endl;
+					string name, teacher;
+					cin >> name >> teacher;
+					return m_CourseAdmin.AddCourse(name, teacher);
+				}
 				break;
 			case 4:
-				return  CourseAdmin.DeleteLastCourse();
+				{
+					count << "input the id will be deleted" << endl;
+					unsigned id = 0;
+					cin >> id;
+					return m_CourseAdmin.DeleteCourse(id);
+				}
 				break;
 			case 5:
 				{
-				string name;
-				cout << "input the name will be deleted" << endl;
-				cin >> name;
-				return CourseAdmin.DeleteCourse(name);
+					string name;
+					cout << "input the name tou want" << endl;
+					cin >> name;
+					Course course;
+					bool result = m_CourseAdmin.GetFistCourseByPartName(name, course)
+					if (result)
+						cout << course;
+					return result;
 				}
 				break;
 			case 6:
 				{
-				unsigned int id;
-				cout << "input the id will be deleted" << endl;
-				cin >> id;
-				return CourseAdmin.DeleteCourse(id);
+					cout << "input course's name teacher" << endl;
+					string  teacher;
+					cin >> teacher;
+					cout << "teacher " << teacher << " have " <<  
+							m_CourseAdmin.StatisticForTeacher(teacher) << " course" << endl;
+					return true;
 				}
 				break;
 			case 7:
-				{
-				string name;
-				cout << "input the name will be added" << endl;
-				cin >> name;
-				return CourseAdmin.AddCourse(name);
-				}
+				return m_CourseAdmin.SortByName();
 				break;
 			case 8:
-				ExitFlag = true;
+				return m_CourseAdmin.SortById();
+				break;
+			case 9:
+				return m_CourseAdmin.SortByTeacher();
+				break;	
+			case 10:
+				{
+					cout << "input course's old and new teacher" << endl;
+					string old_teacher, new_teacher;
+					cin >> old_teacher >> new_teacher;
+					return m_CourseAdmin.ReplaceTeacher(old_teacher, new_teacher);
+				}
+				break;
+			case 11:
+				m_ExitFlag = true;
 				return true;
 				break;
 			default:
