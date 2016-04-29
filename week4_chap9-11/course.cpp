@@ -1,10 +1,10 @@
 #include "common.h"
 #include "course.h"
-
+#include <string>
 
 ostream &operator<<(ostream &os, const Course &course)
 {
-	os << course.Id() << course.Name() << " teached by " << course.Teacher() << endl;
+	os << course.Id() << " " << course.Name() << " teached by " << course.Teacher() << endl;
 	return os; 
 }
 
@@ -86,10 +86,10 @@ bool CourseManager::DeleteCourse(const string &name)
 	bool erase_once = false;
 	for (auto begin = m_CourseCap.begin(); begin != m_CourseCap.end(); begin++)
 	{
-		if (*begin.Name() == name)
+		if (begin->Name() == name)
 		{
 			erase_once = true;
-			m_IdSet.erase(*begin.Id());
+			m_IdSet.erase(begin->Id());
 			begin = m_CourseCap.erase(begin);
 
 		}
@@ -103,10 +103,10 @@ bool CourseManager::DeleteCourse(unsigned id)
 	bool erase_once = false;
 	for (auto begin = m_CourseCap.begin(); begin != m_CourseCap.end(); begin++)
 	{
-		if (*begin.Id() == id)
+		if (begin->Id() == id)
 		{
 			erase_once = true;
-			m_IdSet.erase(*begin.Id());
+			m_IdSet.erase(begin->Id());
 			begin = m_CourseCap.erase(begin);
 		}
 	}
@@ -119,10 +119,10 @@ bool CourseManager::DeleteTeacher(const string &teacher)
 	bool erase_once = false;
 	for (auto begin = m_CourseCap.begin(); begin != m_CourseCap.end(); begin++)
 	{
-		if (*begin.Name() == name)
+		if (begin->Name() == teacher)
 		{
 			erase_once = true;
-			m_IdSet.erase(*begin.Id());
+			m_IdSet.erase(begin->Id());
 			begin = m_CourseCap.erase(begin);
 		}
 	}
@@ -134,61 +134,62 @@ bool CourseManager::EditCourse(unsigned id, const string &name, const string &te
 {
 	if (!CourseExisted(id))
 		return false;
-
-	for (auto begin = m_CourseCap.begin(); begin != m_CourseCap.end(); begin++) 
+		
+	auto begin = m_CourseCap.begin();
+	for (; begin != m_CourseCap.end(); begin++) 
 	{
-		if (*begin.Id() == id)
+		if (begin->Id() == id)
 			break;
 	}
 
 	if (begin == m_CourseCap.end())
 		return false;
 
-	*begin.SetName(name);
-	*begin.SetTeacher(teacher);
+	begin->SetName(name);
+	begin->SetTeacher(teacher);
 
 	return true;
 }
 
-bool CourseManager::GetFistCourseByName(const string &name, Course &CourseOut, bool forward = true)const
+bool CourseManager::GetFistCourseByName(const string &name, Course &CourseOut, bool forward)const
 {
-	auto compare_f = [](const Course &course, const string name)->bool
+	auto compare_f = [](const Course &course, const string &name)->bool
 					{
 						if (course.Name() == name) 
 							return true; 
 						else 
 							return false;
-					}
+					};
 
 	return FindFirstIf(name, compare_f, CourseOut, forward);
 }
 
-bool CourseManager::GetFistCourseByPartName(const string &part_name, Course &CourseOut, bool forward = true)const
+bool CourseManager::GetFistCourseByPartName(const string &part_name, Course &CourseOut, bool forward)const
 {
-	auto compare_f = [](const Course &course, const string part_name)->bool
+	auto compare_f = [](const Course &course, const string &part_name)->bool
 					{
 						if (course.Name().find(part_name) != string::npos) 
 							return true; 
 						else 
 							return false;
-					}
+					};
 
 	return FindFirstIf(part_name, compare_f, CourseOut, forward);
 }
 
-bool CourseManager::GetFistCourseByTeacher(const string &teacher, Course &CourseOut, bool forward = true)const
+bool CourseManager::GetFistCourseByTeacher(const string &teacher, Course &CourseOut, bool forward)const
 {
-	auto compare_f = [](const Course &course, const string teacher)->bool
+	auto compare_f = [](const Course &course, const string &teacher)->bool
 					{
 						if (course.Teacher() == teacher) 
 							return true; 
 						else 
 							return false;
-					}
-	return FindFirstIf(name, compare_f, CourseOut, forward);
+					};
+	return FindFirstIf(teacher, compare_f, CourseOut, forward);
 }
 
-bool CourseManager::FindFirstIf(const string &str, compare_str_type f, Course &CourseOut, bool forward = true)const
+bool CourseManager::FindFirstIf(const string &str, compare_str_type f, Course &CourseOut, bool forward)const
 {
 	if (forward)
 	{
@@ -197,7 +198,7 @@ bool CourseManager::FindFirstIf(const string &str, compare_str_type f, Course &C
 		{
 			if (f(*it, str)) 
 			{
-				CourseOut == *it;
+				CourseOut = *it;
 				return true;
 			}
 		}
@@ -209,7 +210,7 @@ bool CourseManager::FindFirstIf(const string &str, compare_str_type f, Course &C
 		{
 			if (f(*it, str)) 
 			{
-				CourseOut == *it;
+				CourseOut = *it;
 				return true;
 			}
 		}
@@ -223,9 +224,9 @@ bool CourseManager::GetCourseById(unsigned id, Course &CourseOut)const
 	auto it = m_CourseCap.begin();
 	for ( ; it != m_CourseCap.end(); ++it)
 	{
-		if (*it.Id() == id) 
+		if (it->Id() == id) 
 		{
-			CourseOut == *it;
+			CourseOut = *it;
 			return true;
 		}
 	}
@@ -238,7 +239,7 @@ unsigned CourseManager::StatisticTeacher(void)
 	set<string> TeacherSet;
 	for (auto begin = m_CourseCap.begin() ; begin != m_CourseCap.end(); ++begin)
 	{
-		TeacherSet.insert(*begin.Teacher());
+		TeacherSet.insert(begin->Teacher());
 	}
 
 	return TeacherSet.size();
@@ -252,7 +253,7 @@ unsigned CourseManager::StatisticForTeacher(const string &teacher)
 					return true;
 				else
 					return false;
-			}
+			};
 
 	return count_if(m_CourseCap.begin(), m_CourseCap.end(), f);
 }
@@ -264,24 +265,24 @@ unsigned CourseManager::StatisticCourse(void)
 
 bool CourseManager::SortByName(void)
 {
-	auto f = [](const Course &first; const Course &second)->bool{return first.Name() < second.Name();}
-	sort_stable(m_CourseCap.begin(), m_CourseCap.end(), f);
+	auto f = [](const Course &first, const Course &second)->bool{return first.Name() < second.Name();};
+	m_CourseCap.sort(f);
 
 	return true;
 }
 
 bool CourseManager::SortByTeacher(void)
 {
-	auto f = [](const Course &first; const Course &second)->bool{return first.Teacher() < second.Teacher();}
-	sort_stable(m_CourseCap.begin(), m_CourseCap.end(), f);
+	auto f = [](const Course &first, const Course &second)->bool{return first.Teacher() < second.Teacher();};
+	m_CourseCap.sort(f);
 
 	return true;
 }
 
 bool CourseManager::SortById(void)
 {
-	auto f = [](const Course &first; const Course &second)->bool{return first.Id() < second.Id();}
-	sort_stable(m_CourseCap.begin(), m_CourseCap.end(), f);
+	auto f = [](const Course &first, const Course &second)->bool{return first.Id() < second.Id();};
+	m_CourseCap.sort(f);
 
 	return true;
 }
@@ -291,7 +292,8 @@ bool CourseManager::IsEqual(unsigned firstId, unsigned secondId)
 	Course course1, course2;
 	if (GetCourseById(firstId, course1) && GetCourseById(secondId, course2))
 	{
-		return (course1 == course2);
+		return (course1.Id() == course2.Id() && course1.Name() == course2.Name() && 
+					course1.Teacher() == course2.Teacher());
 	}
 
 	return false;
@@ -309,33 +311,17 @@ bool CourseManager::ReplaceTeacher(const string &old_teacher, const string &new_
 	return true;
 }
 
-bool CourseManager::PrintAll(ostream &fs) const
+bool CourseManager::PrintAll(void) const
 {
 	if (m_CourseCap.empty())
 		return false;
 
-	fs << "there " << m_CourseCap.size() > 1 ? " are " : " is " 
-	<< m_CourseCap.size() << "course" << m_CourseCap.size() > 1 ? "s" : "" << endl;
+	cout << "there " << ((m_CourseCap.size() > 1) ? " are " : " is " )
+	<< m_CourseCap.size() << "course" << (m_CourseCap.size() > 1 ? "s" : "") << endl;
 	for (auto c : m_CourseCap)
 	{
-		fs << c;
+		cout << c;
 	}
-	return true;
-}
-
-bool CourseManager::PrintCourse(const string &name) const
-{
-	if (m_CourseCap.empty())
-		return false;
-
-	for (auto c : m_CourseCap)
-	{
-		if (c.Name() == name)
-		{
-			cout << c;
-		}
-	}
-
 	return true;
 }
 
@@ -380,7 +366,8 @@ bool CourseManager::ShowMaxLenCourse(void) const
 
 int CourseManager::GetNewId(void)
 {
-	for (unsigned id = 0; CourseExisted(id); id++) {};
+	unsigned id = 0;
+	for (; CourseExisted(id); id++) {};
 	//return the first not used id
 	return id;
 }
@@ -388,29 +375,35 @@ int CourseManager::GetNewId(void)
 //CmdManager
 CmdManager::CmdManager(string LogFileName)
 {
-	LogHandle.open(LogFileName, ofstream::out | ofstream::app);
+	m_LogHandle.open(LogFileName, ofstream::out | ofstream::app);
 }
 CmdManager::~CmdManager()
 {
-	LogHandle.close();
+	m_LogHandle.close();
 }
 
 bool CmdManager::Run(void)
 {
-	while(!ExitFlag)
+	while(!m_ExitFlag)
 	{
 		cout << "\12=================" << endl;
 		cout << "input a cmd" << endl;
-		unsigned cmd = 0;
-		cin >> cmd;
-
-		RecordCmd(cmd, Process(cmd));
+		string  cmdstr;
+		cin >> cmdstr;
+		
+		unsigned cmd = std::stoul(cmdstr);
+		if (IsValidCmd(cmd))
+			RecordCmd(cmd, Process(cmd));
+		else
+		{
+			cout << "invalid cmd " << cmd << endl;
+		}
 	}
 
 	return true;
 }	
 
-ostream &CmdManager::PrintHelpInfo(void)
+bool CmdManager::PrintHelpInfo(void)
 {
 	cout << "usage:\12" << 
      "input 0: show help info\12" \
@@ -425,6 +418,8 @@ ostream &CmdManager::PrintHelpInfo(void)
      "input 9: sort by teacher\12" \
      "input 10: replace a teacher\12" \
      "input 11: exit!" << endl;
+
+     return true;
 }
 
 bool CmdManager::Process(unsigned int cmd)
@@ -460,7 +455,7 @@ bool CmdManager::Process(unsigned int cmd)
 				break;
 			case 4:
 				{
-					count << "input the id will be deleted" << endl;
+					cout << "input the id will be deleted" << endl;
 					unsigned id = 0;
 					cin >> id;
 					return m_CourseAdmin.DeleteCourse(id);
@@ -469,10 +464,10 @@ bool CmdManager::Process(unsigned int cmd)
 			case 5:
 				{
 					string name;
-					cout << "input the name tou want" << endl;
+					cout << "input the name you want" << endl;
 					cin >> name;
 					Course course;
-					bool result = m_CourseAdmin.GetFistCourseByPartName(name, course)
+					bool result = m_CourseAdmin.GetFistCourseByPartName(name, course);
 					if (result)
 						cout << course;
 					return result;
@@ -524,7 +519,7 @@ bool CmdManager::Process(unsigned int cmd)
 
 bool CmdManager::IsValidCmd(unsigned int cmd)
 {
-	if (cmd >= MinCmd && cmd <= MaxCmd)
+	if (cmd >= m_MinCmd && cmd <= m_MaxCmd)
 		return true;
 	else
 		return false;
@@ -532,9 +527,9 @@ bool CmdManager::IsValidCmd(unsigned int cmd)
 
 bool CmdManager::RecordCmd(unsigned int cmd, bool Rslt)
 {
-	if (LogHandle.good())
+	if (m_LogHandle.good())
 	{
-		LogHandle << "cmd " << cmd << "result " << Rslt << endl;
+		m_LogHandle << "cmd " << cmd << "result " << Rslt << endl;
 	}
 	else
 	{

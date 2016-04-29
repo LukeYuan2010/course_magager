@@ -104,7 +104,7 @@ class CmdManager
 	bool Run(void);	
 
 	private:
-	ostream &PrintHelpInfo(void);
+	bool PrintHelpInfo(void);
 	bool Process(unsigned int cmd);
 	bool IsValidCmd(unsigned int cmd);
 	bool RecordCmd(unsigned int cmd, bool Rslt);
